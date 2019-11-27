@@ -14,19 +14,17 @@ df_wine = pd.read_csv('wine.data', header=None)
                    'Color intensity', 'Hue',
                    'OD280/OD315 of diluted wines', 'Proline']
 '''
-df_wine.head()
+df_wine.head()  '''자료 첫 부분만 확인'''
 
 
 # test set split
 
 from sklearn.model_selection import train_test_split
 X, y = df_wine.iloc[:, 1:].values, df_wine.iloc[:, 0].values
-X_train, X_test, y_train, y_test =     train_test_split(X, y, test_size=0.3, 
-                     stratify=y,
-                     random_state=0)
+X_train, X_test, y_train, y_test =     train_test_split(X, y, test_size=0.3, stratify=y, random_state=0)
 
 
-# Standard Scaining: z = (x - u) / s
+# Standard Scaining: z = (x - u) / s   Proline 데이터의 크기 때문에 전체 데이터셋이 왜곡되므로 스케일링. 
 
 from sklearn.preprocessing import StandardScaler
 
@@ -34,9 +32,12 @@ sc = StandardScaler()
 X_train_std = sc.fit_transform(X_train)
 X_test_std = sc.transform(X_test)
 
+''' fit(): 학습데이터로부터 learning model 생성
+transform(): fit()으로부터 생성된 파라미터들을 모델에 적용하여 변환된 데이터 셋 생성
+fit_transform(): 위 두 과정을 동시에 작동 '''
+
 
 # covariance matrix
-
 
 import numpy as np
 cov_mat = np.cov(X_train_std.T)                             # np.cov(m, y=None, rowvar=True, bias=False, ddof=None, fweights=None, aweights=None)

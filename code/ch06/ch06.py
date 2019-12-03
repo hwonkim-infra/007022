@@ -88,7 +88,7 @@ print('CV 정확도 점수: %s' % scores['test_accuracy'])
 print('CV 정확도: %.3f +/- %.3f' % (np.mean(scores['test_accuracy']), np.std(scores['test_accuracy'])))
 
 
-# In[15]:
+# 학습 곡선과 검증 곡선을 사용한 알고리즘 디버깅
 
 
 import matplotlib.pyplot as plt
@@ -103,13 +103,9 @@ test_mean = np.mean(test_scores, axis=1)
 test_std = np.std(test_scores, axis=1)
 
 plt.plot(train_sizes, train_mean, color='blue', marker='o', markersize=5, label='training accuracy')
-
 plt.fill_between(train_sizes, train_mean + train_std, train_mean - train_std, alpha=0.15, color='blue')
-
 plt.plot(train_sizes, test_mean, color='green', linestyle='--', marker='s', markersize=5, label='validation accuracy')
-
 plt.fill_between(train_sizes, test_mean + test_std, test_mean - test_std, alpha=0.15, color='green')
-
 plt.grid()
 plt.xlabel('Number of training samples')
 plt.ylabel('Accuracy')
@@ -119,11 +115,12 @@ plt.tight_layout()
 plt.show()
 
 
-# In[16]:
+# 검증 곡선으로 과대적합과 과소적합 조사
 
 
 from sklearn.model_selection import validation_curve
-
+    # validation_curve: 최적화할 파라미터 이름과 범위, 그리고 성능 기준을
+    # param_name, param_range, scoring 인수로 받아 파라미터 범위 모든 경우에 대해 성능 기준 계산
 
 param_range = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
 train_scores, test_scores = validation_curve(estimator=pipe_lr, X=X_train, y=y_train, param_name='logisticregression__C', param_range=param_range, cv=10)
@@ -148,7 +145,8 @@ plt.tight_layout()
 plt.show()
 
 
-# In[17]:
+# 그리드 서치를 사용한 하이퍼파라미터 튜닝: 
+# 자동으로 복수개의 내부 모형을 생성하고 이를 모두 실행시켜서 최적 파라미터를 탐색
 
 
 from sklearn.model_selection import GridSearchCV
@@ -161,6 +159,7 @@ param_range = [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
 param_grid = [{'svc__C': param_range, 'svc__kernel': ['linear']}, {'svc__C': param_range, 'svc__gamma': param_range, 'svc__kernel': ['rbf']}]
 
 gs = GridSearchCV(estimator=pipe_svc, param_grid=param_grid, scoring='accuracy', cv=10, n_jobs=-1)
+    # n_jobs : 내부적으로 멀티 프로세스를 사용하여 그리드서치 수행. CPU 코어의 수가 충분하다면 n_jobs를 늘릴 수록 속도가 증가. (default 1)
 gs = gs.fit(X_train, y_train)
 print(gs.best_score_)
 print(gs.best_params_)

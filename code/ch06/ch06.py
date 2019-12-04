@@ -187,19 +187,19 @@ scores = cross_val_score(gs, X_train, y_train, scoring='accuracy', cv=5)
 print('CV 정확도: %.3f +/- %.3f' % (np.mean(scores), np.std(scores)))
 
 
-# In[21]:
+# 오차 행렬 구현
 
 
 from sklearn.metrics import confusion_matrix
-
+    # 타겟의 원래 클래스와 모형이 예측한 클래스가 일치하는지는 갯수로 센 결과를 표로 나타냄
+    
 pipe_svc.fit(X_train, y_train)
 y_pred = pipe_svc.predict(X_test)
 confmat = confusion_matrix(y_true=y_test, y_pred=y_pred)
 print(confmat)
 
 
-# In[22]:
-
+# 오차 행렬을 그림으로 표기
 
 fig, ax = plt.subplots(figsize=(2.5, 2.5))
 ax.matshow(confmat, cmap=plt.cm.Blues, alpha=0.3)
@@ -214,7 +214,7 @@ plt.tight_layout()
 plt.show()
 
 
-# In[23]:
+# 정밀도, 재현율, F1을 구현
 
 
 from sklearn.metrics import precision_score, recall_score, f1_score
@@ -224,32 +224,20 @@ print('재현율: %.3f' % recall_score(y_true=y_test, y_pred=y_pred))
 print('F1: %.3f' % f1_score(y_true=y_test, y_pred=y_pred))
 
 
-# In[24]:
-
+# 양성 레이블을 변경: f1_score를 측정지표로 사용:
 
 from sklearn.metrics import make_scorer
-
 scorer = make_scorer(f1_score, pos_label=0)
-
 c_gamma_range = [0.01, 0.1, 1.0, 10.0]
+param_grid = [{'svc__C': c_gamma_range, 'svc__kernel': ['linear']}, {'svc__C': c_gamma_range, 'svc__gamma': c_gamma_range, 'svc__kernel': ['rbf']}]
 
-param_grid = [{'svc__C': c_gamma_range,
-               'svc__kernel': ['linear']},
-              {'svc__C': c_gamma_range,
-               'svc__gamma': c_gamma_range,
-               'svc__kernel': ['rbf']}]
-
-gs = GridSearchCV(estimator=pipe_svc,
-                  param_grid=param_grid,
-                  scoring=scorer,
-                  cv=10,
-                  n_jobs=-1)
+gs = GridSearchCV(estimator=pipe_svc, param_grid=param_grid, scoring=scorer, cv=10, n_jobs=-1)
 gs = gs.fit(X_train, y_train)
 print(gs.best_score_)
 print(gs.best_params_)
 
 
-# In[25]:
+# ROC (Receiver Operating Characteristic) 그래프: 분류기의 임계값을 바꾸어가며 FPR와 TPR 점수 기반으로 분류 모델 선택.
 
 
 from sklearn.metrics import roc_curve, auc
@@ -271,9 +259,12 @@ for i, (train, test) in enumerate(cv):
     probas = pipe_lr.fit(X_train2[train], y_train[train]).predict_proba(X_train2[test])
 
     fpr, tpr, thresholds = roc_curve(y_train[test], probas[:, 1], pos_label=1)
+        # roc_curve 이용하여 파이프라인에 있는 Logistic Regression 모델 ROC 값 계산.
     mean_tpr += interp(mean_fpr, fpr, tpr)
+        # interp 함수: 3게의 폴드에 대한 ROC 곡선 보간하여 평균 계산.
     mean_tpr[0] = 0.0
     roc_auc = auc(fpr, tpr)
+        # auc 함수 이용하여 곡선 아래 면적 계산.
     plt.plot(fpr, tpr, label='ROC fold %d (area = %0.2f)' % (i+1, roc_auc))
 
 plt.plot([0, 1], [0, 1], linestyle='--', color=(0.6, 0.6, 0.6), label='random guessing')
@@ -284,6 +275,7 @@ mean_auc = auc(mean_fpr, mean_tpr)
 plt.plot(mean_fpr, mean_tpr, 'k--', label='mean ROC (area = %0.2f)' % mean_auc, lw=2)
 plt.plot([0, 0, 1], [0, 1, 1], linestyle=':', color='black', label='perfect performance')
 
+    
 plt.xlim([-0.05, 1.05])
 plt.ylim([-0.05, 1.05])
 plt.xlabel('false positive rate')
@@ -305,7 +297,7 @@ y_pred = np.zeros(y_imb.shape[0])
 np.mean(y_pred == y_imb) * 100
 
 
-# In[28]:
+# 불균형 (소수) 클래스 분류: 복원 추출 방식으로 소수 샘플을 다수 샘플 크기만큼 확장 
 
 
 from sklearn.utils import resample
@@ -315,8 +307,7 @@ X_upsampled, y_upsampled = resample(X_imb[y_imb == 1], y_imb[y_imb == 1], replac
 print('샘플링한 후의 클래스 1의 샘플 개수:', X_upsampled.shape[0])
 
 
-# In[29]:
-
+# 클래스 1을 업샘플링
 
 X_bal = np.vstack((X[y == 0], X_upsampled))
 y_bal = np.hstack((y[y == 0], y_upsampled))
